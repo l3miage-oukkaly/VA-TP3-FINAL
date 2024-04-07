@@ -6,7 +6,10 @@ import fr.uga.l3miage.spring.tp3.exceptions.technical.ExamNotFoundException;
 import fr.uga.l3miage.spring.tp3.mappers.SessionMapper;
 import fr.uga.l3miage.spring.tp3.models.EcosSessionEntity;
 import fr.uga.l3miage.spring.tp3.models.EcosSessionProgrammationEntity;
+import fr.uga.l3miage.spring.tp3.models.ExamEntity;
 import fr.uga.l3miage.spring.tp3.request.SessionCreationRequest;
+import fr.uga.l3miage.spring.tp3.request.SessionProgrammationCreationRequest;
+import fr.uga.l3miage.spring.tp3.request.SessionProgrammationStepCreationRequest;
 import fr.uga.l3miage.spring.tp3.responses.SessionResponse;
 import fr.uga.l3miage.spring.tp3.responses.enums.SessionStatus;
 import org.junit.jupiter.api.Test;
@@ -38,22 +41,56 @@ public class SessionServiceTest {
     private SessionMapper sessionMapper;
 
     @Test
-    void testCreateSession() throws ExamNotFoundException {
-
-        SessionCreationRequest sessionCreationRequest = SessionCreationRequest.builder()
-                .name("test")
-                .startDate(LocalDateTime.of(2020, 1, 1, 0, 0, 0))
-                .endDate(LocalDateTime.of(2020, 1, 1, 1, 0, 0))
-                .examsId(Set.of())
+    void createSessionDontThrow() throws ExamNotFoundException {
+        SessionCreationRequest sessionCreationRequest = SessionCreationRequest
+                .builder().build();
+        EcosSessionEntity ecosSessionEntity = EcosSessionEntity
+                .builder().build();
+        SessionProgrammationCreationRequest sessionProgrammationCreationRequest = SessionProgrammationCreationRequest
+                .builder().build();
+        SessionProgrammationStepCreationRequest sessionProgrammationStepCreationRequest = SessionProgrammationStepCreationRequest
+                .builder().build();
+        ExamEntity examEntity = ExamEntity
+                .builder()
+                .id(1L)
                 .build();
 
-        EcosSessionEntity ecosSessionEntity = sessionMapper.toEntity(sessionCreationRequest);
-        when(examComponent.getAllById(anySet())).thenReturn(Set.of());
-        when(sessionComponent.createSession(any(EcosSessionEntity.class))).thenReturn(ecosSessionEntity);
-        SessionResponse expectedResponse = sessionMapper.toResponse(ecosSessionEntity);
-        SessionResponse response = sessionService.createSession(sessionCreationRequest);
+        sessionProgrammationCreationRequest.setSteps(Set.of(sessionProgrammationStepCreationRequest));
+        sessionCreationRequest.setExamsId(Set.of(examEntity.getId()));
+        sessionCreationRequest.setEcosSessionProgrammation(sessionProgrammationCreationRequest);
 
-        assertThat(response).usingRecursiveComparison().isEqualTo(expectedResponse);
+
+        when(sessionComponent.createSession(any(EcosSessionEntity.class))).thenReturn(ecosSessionEntity);
+        when(examComponent.getAllById(Set.of(anyLong()))).thenReturn(Set.of(examEntity));
+
+        SessionResponse sessionResponseExpected = sessionMapper.toResponse(ecosSessionEntity);
+        SessionResponse sessionResponseActual = sessionService.createSession(sessionCreationRequest);
+
+        assertThat(sessionResponseActual).isEqualTo(sessionResponseExpected);
+    }
+
+    @Test
+    void createSessionThrowExamNotFoundException() throws ExamNotFoundException {
+        SessionCreationRequest sessionCreationRequest = SessionCreationRequest
+                .builder().build();
+        EcosSessionEntity ecosSessionEntity = EcosSessionEntity
+                .builder().build();
+        SessionProgrammationCreationRequest sessionProgrammationCreationRequest = SessionProgrammationCreationRequest
+                .builder().build();
+        SessionProgrammationStepCreationRequest sessionProgrammationStepCreationRequest = SessionProgrammationStepCreationRequest
+                .builder().build();
+        ExamEntity examEntity = ExamEntity
+                .builder()
+                .id(1L)
+                .build();
+
+        sessionProgrammationCreationRequest.setSteps(Set.of(sessionProgrammationStepCreationRequest));
+        sessionCreationRequest.setExamsId(Set.of(examEntity.getId()));
+        sessionCreationRequest.setEcosSessionProgrammation(sessionProgrammationCreationRequest);
+
+        when(examComponent.getAllById(Set.of(anyLong()))).thenThrow(ExamNotFoundException.class);
+
+        assertThat(() -> sessionService.createSession(sessionCreationRequest)).isInstanceOf(ExamNotFoundException.class);
     }
 
 }
