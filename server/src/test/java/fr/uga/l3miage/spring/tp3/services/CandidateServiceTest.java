@@ -73,7 +73,6 @@ public class CandidateServiceTest {
 
     @Test
     void testGetCandidateAverageNotFound() throws CandidateNotFoundException {
-
         when(candidateComponent.getCandidatById(anyLong())).thenThrow(CandidateNotFoundException.class);
         assertThrows(CandidateNotFoundRestException.class, () -> candidateService.getCandidateAverage(1L));
     }
