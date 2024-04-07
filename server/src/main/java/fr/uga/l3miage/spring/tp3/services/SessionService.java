@@ -3,6 +3,7 @@ package fr.uga.l3miage.spring.tp3.services;
 import fr.uga.l3miage.spring.tp3.components.ExamComponent;
 import fr.uga.l3miage.spring.tp3.components.SessionComponent;
 import fr.uga.l3miage.spring.tp3.enums.SessionStatus;
+import fr.uga.l3miage.spring.tp3.exceptions.rest.ChangeSessionRestException;
 import fr.uga.l3miage.spring.tp3.exceptions.rest.CreationSessionRestException;
 import fr.uga.l3miage.spring.tp3.exceptions.technical.ExamNotFoundException;
 import fr.uga.l3miage.spring.tp3.mappers.SessionMapper;
@@ -11,8 +12,10 @@ import fr.uga.l3miage.spring.tp3.models.EcosSessionProgrammationEntity;
 import fr.uga.l3miage.spring.tp3.models.EcosSessionProgrammationStepEntity;
 import fr.uga.l3miage.spring.tp3.models.ExamEntity;
 import fr.uga.l3miage.spring.tp3.request.SessionCreationRequest;
+import fr.uga.l3miage.spring.tp3.responses.CandidateEvaluationResponse;
 import fr.uga.l3miage.spring.tp3.responses.SessionResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -46,6 +49,16 @@ public class SessionService {
             return sessionMapper.toResponse(sessionComponent.createSession(ecosSessionEntity));
         }catch (RuntimeException | ExamNotFoundException e){
             throw new CreationSessionRestException(e.getMessage());
+        }
+    }
+
+    public Set<CandidateEvaluationResponse> changeSessionStateToEvalEnded(Long sessionId)  {
+        try {
+            EcosSessionEntity ecosSessionEntity = sessionComponent.changeSessionStateToEnded(sessionId);
+            return sessionMapper.toResponseSet(ecosSessionEntity);
+        }catch (RuntimeException e){
+            String requestUri = "/api/sessions/" + sessionId + "/status";
+            throw new ChangeSessionRestException(e.getMessage(), requestUri, null);
         }
     }
 }

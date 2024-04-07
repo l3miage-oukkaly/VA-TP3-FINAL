@@ -45,6 +45,7 @@ public class CandidateControllerTest {
     @AfterEach
     public void clear() {
         candidateRepository.deleteAll();
+        candidateEvaluationGridRepository.deleteAll();
     }
 
     @Test
