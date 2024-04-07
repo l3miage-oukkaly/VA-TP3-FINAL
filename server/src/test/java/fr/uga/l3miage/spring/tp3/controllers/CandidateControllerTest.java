@@ -36,9 +36,6 @@ public class CandidateControllerTest {
     private TestRestTemplate testRestTemplate;
 
     @Autowired
-    private CandidateComponent candidateComponent;
-
-    @Autowired
     private CandidateRepository candidateRepository;
 
     @Autowired
